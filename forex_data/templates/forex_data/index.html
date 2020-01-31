@@ -1,0 +1,154 @@
+{% load  static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     {% comment %} <meta http-equiv="refresh" content="" /> {% endcomment %}
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{% static 'forex_data/index.css'%}"/>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <title>Forex Data - EURO:USD</title>
+</head>
+<body onload="getChartData()">
+
+    <div id="left_pane">
+        <h1>Forex<span>PriceFeed</span></h1>
+    </div>
+
+    <div id="right_pane">
+        <div id="right_pane_desc">
+            <h1>Dashboard</h1>
+            <div id="currency">
+                <p>EURO-USD</p>
+            </div>
+
+            <div id="currency_prompt">
+                <img src="{% static 'forex_data/info_icon.png' %}" class="info_icon">
+                <p class="info_text">
+                    All prices shown are in US dollars: $
+                </p>
+            </div>
+        </div>
+        <div class="right_pane_row">
+            <div class="pane_block">
+                <div class="mini_block">
+                    <span>Maximum value</span>
+                    <p class="pane_block_num" id="max_val">{{ max }}</p>
+                    <img src="{% static 'forex_data/info_icon.png' %}" class="info_icon">
+                    <span class="info_text">Showing maximum price from last 100 recorded prices.</span>
+                </div>
+                <div class="mini_block mini_block_right">
+                    <span>Minimum value</span> 
+                    <p class="pane_block_num" id="min_val">{{ min }}</p>
+                    <img src="{% static 'forex_data/info_icon.png' %}" class="info_icon">
+                    <span class="info_text">Showing minimum price from last 100 recorded prices.</span>
+                </div>
+                <div class="mini_block mini_block_bottom">
+                    <span>Average value</span>
+                    <p class="pane_block_num" id="avg_val"> {{ avg }}</p>
+                    <img src="{% static 'forex_data/info_icon.png' %}" class="info_icon">
+                    <span class="info_text">Showing average price of last 100 recorded prices.</span>
+                </div>
+
+                <div class="mini_block mini_block_right mini_block_bottom">
+                </div>
+            </div>
+
+            <div class="pane_block chart">
+                <canvas id="myChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+
+
+        <div class="right_pane_row bottom_row">
+            <div class="pane_block table">
+                <p>Last 100 prices</p>
+                <table>
+                    <tr>
+                        <th>Id</th>
+                        <th>Date</th>
+                        <th>Price</th>
+                    </tr>
+                    {% for data in table_data %}
+                        {% if data.shaded == True %}
+                        <tr class="shaded">    
+                        {% else %}
+                        <tr>
+                        {% endif %}
+                            <td>{{ data.count }}</td>
+                            <td>{{ data.date }}</td>
+                            <td>{{ data.price }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+            </div>
+            <div class="pane_block update">
+                <p id="update_prompt">Prices will be updated every 5 seconds</p>
+                <img src="{% static 'forex_data/blue_info_icon.png' %}" class="info_icon">
+                <span class="info_text">This dashboard is updated every 5 seconds<br>
+                    The graph above shows the price of the Dollar compared to the EURO
+                    with a 5 second difference between the values.
+                </span>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        {% comment %} update interface every 5 seconds with latest data {% endcomment %}
+        setInterval(function(){ 
+            $.ajax({
+                "type":"GET",
+                "url":"/chart_data",
+                "dataType":"json",
+                "async":true,
+                "data":{  "csrfmiddlewaretoken": "{{ csrf_token }}", "type":"get_price_data"},
+                "success":function(data){
+                    console.log(data);
+                    $("#min_val").text(data.min);
+                    $("#max_val").text(data.max);
+                    $("#avg_val").text(data.avg);
+                    getChartData();
+                }
+            })
+
+
+            }, 5000);
+
+
+        {% comment %} get chart info {% endcomment %}
+        function getChartData(){
+            $.ajax({
+                "type":"GET",
+                "url":"/chart_data",
+                "dataType":"json",
+                "async":true,
+                "data":{  "csrfmiddlewaretoken": "{{ csrf_token }}", "type":"get_chart_data"},
+                "success":function(data){
+                    console.log(data)
+                    var ctx = document.getElementById('myChart');
+                    var ctx = document.getElementById('myChart').getContext('2d');
+                    var ctx = $('#myChart');
+                    var ctx = 'myChart';
+                    data = {
+                        labels: data.dates,
+                        datasets: [{
+                            label: 'Latest EUR-USD prices',
+                            data: data.prices,
+                            borderColor	:'#D119A0',
+                        }]
+                    }
+                    var myLineChart = new Chart(ctx, {
+                        type: 'line',
+                        data: data,
+                    });
+                }
+            });  
+        }
+    </script>
+</body>
+</html>
