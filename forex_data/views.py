@@ -54,7 +54,7 @@ def latest_prices(type):
         shaded = False
         if count%2 == 0:
             shaded = True
-        prices_and_dates.append({"date":price.date,"price":price.price,"count":count,"shaded":shaded})
+        prices_and_dates.append({"date":price.date.strftime('%Y-%m-%d %H:%M:%S'),"price":price.price,"count":count,"shaded":shaded})
     max_price = max(prices)
     min_price = min(prices)
     avg_price = mean(prices)
