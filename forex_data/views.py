@@ -7,6 +7,7 @@ from statistics import mean
 import json
 import datetime
 import pytz
+# from django.utils import timezone
 ##oanda api key and request parameters
 tz = pytz.timezone('Africa/Johannesburg')
 oanda_count_id = "101-004-13311328-001" 
@@ -28,7 +29,7 @@ def chart_data(request):
         dates = []
         for item in latest_price_data:
             prices.append(item.price)
-            dates.append(item.date.strftime('%Y-%m-%d %H:%M:%S'))
+            dates.append(item.date.astimezone(tz).strftime('%Y-%m-%d %H:%M:%S'))
         return JsonResponse({"dates":dates, "prices":prices})
     else:
       price_data = latest_prices("json")
@@ -54,7 +55,7 @@ def latest_prices(type):
         shaded = False
         if count%2 == 0:
             shaded = True
-        prices_and_dates.append({"date":price.date.strftime('%Y-%m-%d %H:%M:%S'),"price":price.price,"count":count,"shaded":shaded})
+        prices_and_dates.append({"date":price.date.astimezone(tz).strftime('%Y-%m-%d %H:%M:%S'),"price":price.price,"count":count,"shaded":shaded})
     max_price = max(prices)
     min_price = min(prices)
     avg_price = mean(prices)
